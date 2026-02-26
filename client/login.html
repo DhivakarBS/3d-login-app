@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", sans-serif;
+}
+
+body {
+    height: 100vh;
+    overflow: hidden;
+    background: radial-gradient(circle at center, #0f2027, #000000);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 40px;
+    width: 350px;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(0, 255, 255, 0.3);
+    position: relative;
+    z-index: 1;
+    transition: 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-6px);
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 8px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(45deg, #00ffff, #0072ff);
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+.error {
+    margin-top: 10px;
+    color: #ff6b6b;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Enter Email">
+    <input type="password" id="password" placeholder="Enter Password">
+    <button onclick="login()">Login</button>
+    <div class="error" id="error"></div>
+</div>
+
+<script>
+async function login() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    if (!email || !password) {
+        document.getElementById("error").innerText = "Please fill all fields";
+        return;
+    }
+
+    const response = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        localStorage.setItem("loggedIn", "true");
+        window.location.href = "dashboard.html";
+    } else {
+        document.getElementById("error").innerText = data.message;
+    }
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// Scene
+const scene = new THREE.Scene();
+
+// Camera
+const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+);
+camera.position.z = 5;
+
+// Renderer
+const renderer = new THREE.WebGLRenderer({ alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Lighting
+const ambientLight = new THREE.AmbientLight(0x00ffff, 0.4);
+scene.add(ambientLight);
+
+const pointLight = new THREE.PointLight(0x00ffff, 1);
+pointLight.position.set(2, 3, 4);
+scene.add(pointLight);
+
+// Particle Glow
+const particlesGeometry = new THREE.BufferGeometry();
+const particlesCount = 2000;
+const posArray = new Float32Array(particlesCount * 3);
+
+for (let i = 0; i < particlesCount * 3; i++) {
+    posArray[i] = (Math.random() - 0.5) * 15;
+}
+
+particlesGeometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(posArray, 3)
+);
+
+const particlesMaterial = new THREE.PointsMaterial({
+    size: 0.04,
+    color: 0x00ffff,
+    transparent: true,
+    opacity: 0.8
+});
+
+const particlesMesh = new THREE.Points(
+    particlesGeometry,
+    particlesMaterial
+);
+
+scene.add(particlesMesh);
+
+// Floating Spheres
+const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+const sphereMaterial = new THREE.MeshStandardMaterial({
+    color: 0x0072ff,
+    emissive: 0x00ffff,
+    metalness: 0.7,
+    roughness: 0.2
+});
+
+const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+sphere.position.set(-2, 0, -3);
+scene.add(sphere);
+
+// Grid Floor
+//const grid = new THREE.GridHelper(20, 40, 0x00ffff, 0x004444);
+//grid.position.y = -3;
+//scene.add(grid);
+// Mouse interaction
+let mouseX = 0;
+let mouseY = 0;
+
+document.addEventListener("mousemove", (event) => {
+    mouseX = (event.clientX / window.innerWidth - 0.5) * 2;
+    mouseY = (event.clientY / window.innerHeight - 0.5) * 2;
+});
+
+// Animate
+function animate() {
+    requestAnimationFrame(animate);
+
+    particlesMesh.rotation.y += 0.001;
+    sphere.rotation.y += 0.01;
+    sphere.rotation.x += 0.005;
+
+    camera.position.x += (mouseX - camera.position.x) * 0.03;
+    camera.position.y += (-mouseY - camera.position.y) * 0.03;
+
+    camera.position.z = 5 + Math.sin(Date.now() * 0.001) * 0.2;
+
+    renderer.render(scene, camera);
+}
+
+animate();
+
+// Resize
+window.addEventListener("resize", () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+});
+</script>
+<script>
+const loginBtn = document.querySelector("button");
+
+loginBtn.addEventListener("click", async () => {
+    const email = document.querySelector("input[type='email']").value;
+    const password = document.querySelector("input[type='password']").value;
+
+    if (!email || !password) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    const response = await fetch("http://localhost:5000/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+    localStorage.setItem("token", data.token);
+
+    window.location.replace("dashboard.html");
+} else {
+        alert(data.message);
+    }
+});
+</script>
+</body>
+</html>

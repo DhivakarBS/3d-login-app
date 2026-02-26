@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard | Secure App</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1f2f36, #2c5364);
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            width: 350px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        p {
+            opacity: 0.8;
+            margin-bottom: 25px;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            background: #ff4d5a;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #e63c49;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+    <h1>Welcome 🚀</h1>
+    <p id="userInfo">Loading user...</p>
+    <button onclick="logout()">Logout</button>
+</div>
+
+<script>
+const token = localStorage.getItem("token");
+
+// 🚫 If no token → redirect immediately
+if (!token) {
+    window.location.replace("login.html");
+} else {
+    verifyToken();
+}
+
+// 🔐 Verify token with backend
+async function verifyToken() {
+    try {
+        const response = await fetch("/dashboard", {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Invalid token");
+        }
+
+        const data = await response.json();
+
+        // Display user info
+        document.getElementById("userInfo").innerText =
+            "Logged in as: " + data.user.email;
+
+    } catch (error) {
+        localStorage.removeItem("token");
+        window.location.replace("login.html");
+    }
+}
+
+// 🔓 Logout function
+function logout() {
+    localStorage.removeItem("token");
+    window.location.replace("login.html");
+}
+</script>
+
+</body>
+</html>
