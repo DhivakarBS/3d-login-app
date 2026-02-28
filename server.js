@@ -1,7 +1,3 @@
-// ==============================
-//  FULL SQLITE AUTH BACKEND
-// ==============================
-
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
@@ -15,17 +11,15 @@ const SECRET_KEY = process.env.SECRET_KEY || "supersecretkey123";
 
 app.use(express.json());
 
-// ✅ Correct static folder path
+// Serve static files
 app.use(express.static(path.join(__dirname, 'client')));
 
-// ✅ Root route (VERY IMPORTANT)
+// ✅ Root route (IMPORTANT)
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "client", "login.html"));
+    res.sendFile(path.join(__dirname, "client", "index.html"));
 });
 
-// ==============================
-// DATABASE SETUP
-// ==============================
+// ================= DATABASE =================
 
 const db = new sqlite3.Database('./database.sqlite', (err) => {
     if (err) {
@@ -43,9 +37,7 @@ db.run(`
     )
 `);
 
-// ==============================
-// REGISTER ROUTE
-// ==============================
+// ================= REGISTER =================
 
 app.post('/register', async (req, res) => {
     try {
@@ -78,9 +70,7 @@ app.post('/register', async (req, res) => {
     }
 });
 
-// ==============================
-// LOGIN ROUTE
-// ==============================
+// ================= LOGIN =================
 
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
@@ -121,9 +111,7 @@ app.post('/login', (req, res) => {
     );
 });
 
-// ==============================
-// PROTECTED ROUTE
-// ==============================
+// ================= PROTECTED =================
 
 app.get('/dashboard', (req, res) => {
     const authHeader = req.headers.authorization;
@@ -146,9 +134,7 @@ app.get('/dashboard', (req, res) => {
     });
 });
 
-// ==============================
-// START SERVER
-// ==============================
+// ================= START =================
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
