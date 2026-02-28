@@ -11,10 +11,17 @@ const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const SECRET_KEY = "supersecretkey123"; // Later move to .env
+const SECRET_KEY = process.env.SECRET_KEY || "supersecretkey123";
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../client')));
+
+// ✅ Correct static folder path
+app.use(express.static(path.join(__dirname, 'client')));
+
+// ✅ Root route (VERY IMPORTANT)
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "client", "login.html"));
+});
 
 // ==============================
 // DATABASE SETUP
@@ -28,7 +35,6 @@ const db = new sqlite3.Database('./database.sqlite', (err) => {
     }
 });
 
-// Create users table if not exists
 db.run(`
     CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
