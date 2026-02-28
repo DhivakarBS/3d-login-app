@@ -64,7 +64,7 @@ const token = localStorage.getItem("token");
 
 // 🚫 If no token → redirect immediately
 if (!token) {
-    window.location.replace("login.html");
+    window.location.replace("index.html");
 } else {
     verifyToken();
 }
@@ -91,14 +91,14 @@ async function verifyToken() {
 
     } catch (error) {
         localStorage.removeItem("token");
-        window.location.replace("login.html");
+        window.location.replace("index.html");
     }
 }
 
 // 🔓 Logout function
 function logout() {
     localStorage.removeItem("token");
-    window.location.replace("login.html");
+    window.location.replace("index.html");
 }
 </script>
 
