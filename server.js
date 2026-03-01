@@ -126,84 +126,29 @@ app.post('/login', (req, res) => {
 });
 
 // ================= GOOGLE LOGIN =================
-app.post('/google-login', async (req, res) => {
+app.post("/google-login", async (req, res) => {
     try {
         const { token } = req.body;
 
-        if (!token)
-            return res.status(400).json({ message: 'No token provided' });
-
         const ticket = await googleClient.verifyIdToken({
             idToken: token,
-            audience: GOOGLE_CLIENT_ID,
+            audience: process.env.GOOGLE_CLIENT_ID
         });
 
         const payload = ticket.getPayload();
+
+        // 🔥 ADD THESE DEBUG LINES
+        console.log("Backend expecting:", process.env.GOOGLE_CLIENT_ID);
+        console.log("Token audience:", payload.aud);
+
         const email = payload.email;
 
-        db.get(
-            `SELECT * FROM users WHERE email = ?`,
-            [email],
-            (err, user) => {
-
-                if (err)
-                    return res.status(500).json({ message: 'Database error' });
-
-                if (!user) {
-                    const id = uuidv4();
-
-                    db.run(
-                        `INSERT INTO users (id, email, password) VALUES (?, ?, ?)`,
-                        [id, email, 'GOOGLE_USER'],
-                        function (err) {
-                            if (err)
-                                return res.status(500).json({ message: 'User creation failed' });
-
-                            const jwtToken = jwt.sign(
-                                { id, email },
-                                SECRET_KEY,
-                                { expiresIn: '1h' }
-                            );
-
-                            return res.json({ token: jwtToken });
-                        }
-                    );
-                } else {
-                    const jwtToken = jwt.sign(
-                        { id: user.id, email: user.email },
-                        SECRET_KEY,
-                        { expiresIn: '1h' }
-                    );
-
-                    return res.json({ token: jwtToken });
-                }
-            }
-        );
+        res.json({ success: true });
 
     } catch (error) {
-        console.error(error);
-        res.status(401).json({ message: 'Google authentication failed' });
+        console.error("Google Auth Error:", error.message);
+        res.status(401).json({ success: false });
     }
-});
-
-// ================= PROTECTED DASHBOARD =================
-app.get('/dashboard', (req, res) => {
-
-    const authHeader = req.headers.authorization;
-    if (!authHeader)
-        return res.status(401).json({ message: 'No token provided' });
-
-    const token = authHeader.split(' ')[1];
-
-    jwt.verify(token, SECRET_KEY, (err, decoded) => {
-        if (err)
-            return res.status(401).json({ message: 'Invalid token' });
-
-        res.json({
-            message: 'Welcome 🎯',
-            user: decoded
-        });
-    });
 });
 
 // ================= EVENT REGISTRATION =================
