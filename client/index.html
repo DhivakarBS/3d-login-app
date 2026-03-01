@@ -5,6 +5,9 @@
 <title>Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Google Identity Script -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 <style>
 * {
     margin: 0;
@@ -74,6 +77,11 @@ button:hover {
     margin-top: 10px;
     color: #ff6b6b;
 }
+
+.divider {
+    margin: 15px 0;
+    opacity: 0.6;
+}
 </style>
 </head>
 
@@ -81,13 +89,32 @@ button:hover {
 
 <div class="card">
     <h2>Login</h2>
+
     <input type="email" id="email" placeholder="Enter Email">
     <input type="password" id="password" placeholder="Enter Password">
     <button onclick="login()">Login</button>
+
+    <div class="divider">OR</div>
+
+    <!-- Google Login -->
+    <div id="g_id_onload"
+         data-client_id="345142479210-hvb78tkeo0uv1a9k33n5lo9chhtctcn0.apps.googleusercontent.com"
+         data-callback="handleCredentialResponse">
+    </div>
+
+    <div class="g_id_signin"
+         data-type="standard"
+         data-size="large"
+         data-theme="outline"
+         data-text="continue_with"
+         data-shape="rectangular">
+    </div>
+
     <div class="error" id="error"></div>
 </div>
 
 <script>
+/* ================= NORMAL LOGIN ================= */
 async function login() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
@@ -106,21 +133,42 @@ async function login() {
     const data = await response.json();
 
     if (response.ok) {
-        localStorage.setItem("loggedIn", "true");
-        window.location.href = "dashboard.html";
+        localStorage.setItem("token", data.token);
+        window.location.replace("dashboard.html");
     } else {
         document.getElementById("error").innerText = data.message;
     }
 }
+
+/* ================= GOOGLE LOGIN ================= */
+async function handleCredentialResponse(response) {
+    try {
+        const res = await fetch("/google-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: response.credential })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            localStorage.setItem("token", data.token);
+            window.location.replace("dashboard.html");
+        } else {
+            document.getElementById("error").innerText = "Google login failed";
+        }
+
+    } catch (error) {
+        document.getElementById("error").innerText = "Something went wrong";
+    }
+}
 </script>
 
+<!-- ================= THREE JS BACKGROUND ================= -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script>
-// Scene
 const scene = new THREE.Scene();
-
-// Camera
 const camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
@@ -129,12 +177,10 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.z = 5;
 
-// Renderer
 const renderer = new THREE.WebGLRenderer({ alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Lighting
 const ambientLight = new THREE.AmbientLight(0x00ffff, 0.4);
 scene.add(ambientLight);
 
@@ -142,7 +188,6 @@ const pointLight = new THREE.PointLight(0x00ffff, 1);
 pointLight.position.set(2, 3, 4);
 scene.add(pointLight);
 
-// Particle Glow
 const particlesGeometry = new THREE.BufferGeometry();
 const particlesCount = 2000;
 const posArray = new Float32Array(particlesCount * 3);
@@ -170,7 +215,6 @@ const particlesMesh = new THREE.Points(
 
 scene.add(particlesMesh);
 
-// Floating Spheres
 const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 32);
 const sphereMaterial = new THREE.MeshStandardMaterial({
     color: 0x0072ff,
@@ -183,11 +227,6 @@ const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
 sphere.position.set(-2, 0, -3);
 scene.add(sphere);
 
-// Grid Floor
-//const grid = new THREE.GridHelper(20, 40, 0x00ffff, 0x004444);
-//grid.position.y = -3;
-//scene.add(grid);
-// Mouse interaction
 let mouseX = 0;
 let mouseY = 0;
 
@@ -196,7 +235,6 @@ document.addEventListener("mousemove", (event) => {
     mouseY = (event.clientY / window.innerHeight - 0.5) * 2;
 });
 
-// Animate
 function animate() {
     requestAnimationFrame(animate);
 
@@ -214,43 +252,12 @@ function animate() {
 
 animate();
 
-// Resize
 window.addEventListener("resize", () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 });
 </script>
-<script>
-const loginBtn = document.querySelector("button");
 
-loginBtn.addEventListener("click", async () => {
-    const email = document.querySelector("input[type='email']").value;
-    const password = document.querySelector("input[type='password']").value;
-
-    if (!email || !password) {
-        alert("Please fill all fields");
-        return;
-    }
-
-    const response = await fetch("/login", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email, password })
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-    localStorage.setItem("token", data.token);
-
-    window.location.replace("dashboard.html");
-} else {
-        alert(data.message);
-    }
-});
-</script>
 </body>
 </html>

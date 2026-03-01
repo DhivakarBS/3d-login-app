@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Panel</title>
+<style>
+body {
+    font-family: Arial;
+    background: #1f2f36;
+    color: white;
+    padding: 30px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255,255,255,0.1);
+}
+th, td {
+    padding: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    text-align: center;
+}
+th {
+    background: #2c5364;
+}
+</style>
+</head>
+<body>
+
+<h2>College Event Registrations 🎓</h2>
+
+<table id="table">
+    <tr>
+        <th>Email</th>
+        <th>Event</th>
+        <th>Department</th>
+        <th>Year</th>
+    </tr>
+</table>
+
+<script>
+async function loadData() {
+    const res = await fetch('/admin/data');
+    const data = await res.json();
+
+    const table = document.getElementById('table');
+
+    data.forEach(row => {
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+            <td>${row.user_email}</td>
+            <td>${row.event_name}</td>
+            <td>${row.department}</td>
+            <td>${row.year}</td>
+        `;
+
+        table.appendChild(tr);
+    });
+}
+
+loadData();
+</script>
+
+</body>
+</html>

@@ -1,101 +1,123 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dashboard | Secure App</title>
-    <meta charset="UTF-8">
-    <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(135deg, #1f2f36, #2c5364);
-            font-family: Arial, sans-serif;
-            color: white;
-        }
+<title>College Event Registration</title>
+<meta charset="UTF-8">
+<style>
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #1f2f36, #2c5364);
+    font-family: Arial, sans-serif;
+    color: white;
+}
 
-        .card {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(12px);
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            width: 350px;
-        }
+.card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    width: 400px;
+}
 
-        h1 {
-            margin-bottom: 10px;
-        }
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: none;
+}
 
-        p {
-            opacity: 0.8;
-            margin-bottom: 25px;
-        }
+button {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    background: #ff4d5a;
+    color: white;
+    cursor: pointer;
+}
 
-        button {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 8px;
-            background: #ff4d5a;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        button:hover {
-            background: #e63c49;
-        }
-    </style>
+.success {
+    margin-top: 10px;
+    color: #00ffae;
+}
+</style>
 </head>
 
 <body>
 
 <div class="card">
-    <h1>Welcome 🚀</h1>
-    <p id="userInfo">Loading user...</p>
+    <h2>College Event Registration 🎓</h2>
+    <p id="userEmail"></p>
+
+    <select id="event">
+        <option value="Paper Presentation">Paper Presentation</option>
+        <option value="Hackathon">Hackathon</option>
+        <option value="AI Workshop">AI Workshop</option>
+        <option value="Coding Contest">Coding Contest</option>
+    </select>
+
+    <input type="text" id="department" placeholder="Department">
+    <input type="text" id="year" placeholder="Year (e.g., 3rd Year)">
+
+    <button onclick="registerEvent()">Register</button>
+    <br><br>
     <button onclick="logout()">Logout</button>
+
+    <div class="success" id="message"></div>
 </div>
 
 <script>
 const token = localStorage.getItem("token");
 
-// 🚫 If no token → redirect immediately
 if (!token) {
     window.location.replace("index.html");
-} else {
-    verifyToken();
 }
 
-// 🔐 Verify token with backend
-async function verifyToken() {
-    try {
-        const response = await fetch("/dashboard", {
-            method: "GET",
-            headers: {
-                "Authorization": "Bearer " + token
-            }
-        });
+async function verifyUser() {
+    const response = await fetch("/dashboard", {
+        headers: { "Authorization": "Bearer " + token }
+    });
 
-        if (!response.ok) {
-            throw new Error("Invalid token");
-        }
-
-        const data = await response.json();
-
-        // Display user info
-        document.getElementById("userInfo").innerText =
-            "Logged in as: " + data.user.email;
-
-    } catch (error) {
+    if (!response.ok) {
         localStorage.removeItem("token");
         window.location.replace("index.html");
     }
+
+    const data = await response.json();
+    document.getElementById("userEmail").innerText =
+        "Logged in as: " + data.user.email;
 }
 
-// 🔓 Logout function
+verifyUser();
+
+async function registerEvent() {
+    const event_name = document.getElementById("event").value;
+    const department = document.getElementById("department").value;
+    const year = document.getElementById("year").value;
+
+    const response = await fetch("/register-event", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ event_name, department, year })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        document.getElementById("message").innerText = data.message;
+    } else {
+        document.getElementById("message").innerText = "Error registering";
+    }
+}
+
 function logout() {
     localStorage.removeItem("token");
     window.location.replace("index.html");
